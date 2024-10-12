@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        .login-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="login-container">
+            <h1 class="title login-title">Login</h1>
+            <form id="loginForm">
+                <div class="field">
+                    <label class="label">Matrícula</label>
+                    <div class="control">
+                        <input type="text" class="input" id="matricula" placeholder="Matrícula" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Senha</label>
+                    <div class="control">
+                        <input type="password" class="input" id="senha" placeholder="Senha" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button type="submit" class="button is-primary is-fullwidth">Entrar</button>
+                    </div>
+                </div>
+                <div class="error-message" id="error-message"></div>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        async function loadProfessores() {
+            const response = await fetch('professores.json');
+            return response.json();
+        }
+
+        async function login() {
+            const professores = await loadProfessores();
+            const matricula = document.getElementById('matricula').value;
+            const senha = document.getElementById('senha').value;
+
+            const professor = professores.find(p => p.matricula === matricula && p.senha === senha);
+
+            if (professor) {
+                localStorage.setItem('loggedInUser', JSON.stringify(professor));
+                window.location.href = 'dashboard.html';
+            } else {
+                document.getElementById('error-message').innerText = 'Matrícula ou senha incorretos.';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            login();
+        });
+    </script>
+</body>
+</html>

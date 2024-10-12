@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+</head>
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <h1 class="title" id="welcome-message"></h1>
+            <div id="user-options" class="buttons are-large is-centered">
+                <div class="control">
+                    <a class="button is-primary" href="lancar_frequencia.html">Lançar Frequência</a>
+                </div>
+                <div class="control">
+                    <a class="button is-primary" href="lancar_nota.html">Lançar Notas</a>
+                </div>
+                <div class="control">
+                    <button class="button is-success" id="visualizarFrequencia">Visualizar Frequência</button>
+                </div>
+                <div class="control">
+                    <button class="button is-success" id="visualizarNotas">Visualizar Notas</button>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <button class="button is-danger" id="logout">Sair</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        async function loadAlunos() {
+            const response = await fetch('alunos.json');
+            return response.json();
+        }
+
+        async function displayUserInfo() {
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+            const alunos = await loadAlunos();
+
+            if (loggedInUser) {
+                document.getElementById('welcome-message').innerText = `Bem-vindo(a), Prof. ${loggedInUser.nome}!`;
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        document.getElementById('visualizarFrequencia').addEventListener('click', function() {
+            window.location.href = 'visualizar_frequencia.html'; // Redirecionar para a página de visualização de frequência
+        });
+
+        document.getElementById('visualizarNotas').addEventListener('click', function() {
+            window.location.href = 'visualizar_nota.html'; // Redirecionar para a página de visualização de notas
+        });
+
+        displayUserInfo();
+
+        document.getElementById('logout').addEventListener('click', function() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

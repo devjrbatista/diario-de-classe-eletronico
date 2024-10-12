@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançar Nota</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .header-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+        .header-info div {
+            margin: 5px 10px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            text-align: center;
+        }
+        .table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .table td {
+            background-color: #f9f9f9;
+        }
+        .table tr:hover td {
+            background-color: #e0f7fa; /* Azul claro ao passar o mouse */
+        }
+        .success-message {
+            margin-top: 10px;
+            color: #4CAF50; /* Verde para sucesso */
+            text-align: center;
+        }
+        .error-message {
+            margin-top: 10px;
+            color: #D8000C; /* Vermelho para erro */
+            text-align: center;
+        }
+        .small-input {
+            width: 80px; /* Ajuste a largura do input */
+        }
+        .small-input input {
+            font-size: 16px; /* Tamanho da fonte original */
+        }
+        .inactive {
+            background-color: #f0f0f0; /* Cor de fundo para alunos inativos */
+            color: #a0a0a0; /* Cor do texto para alunos inativos */
+            text-decoration: line-through; /* Texto riscado para indicar inatividade */
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title has-text-centered">Lançar Nota</h1>
+            
+            <div id="header-info" class="header-info content"></div>
+
+            <div class="notification is-warning" id="info-message">
+                <strong>Atenção! Selecione um Bimestre para visualizar a nota dos alunos.</strong>
+            </div>
+
+            <div class="field">
+                <label class="label">Bimestre</label>
+                <div class="control">
+                    <div class="select">
+                        <select id="bimestreSelector">
+                            <option value="">Selecione o Bimestre</option>
+                            <option value="1">1º Bimestre</option>
+                            <option value="2">2º Bimestre</option>
+                            <option value="3">3º Bimestre</option>
+                            <option value="4">4º Bimestre</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notification is-danger" id="error-message" style="display: none;"></div>
+
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table class="table is-striped is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th>
+                            <th>Nome do Aluno</th>
+                            <th>Nota</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alunosTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="field has-text-centered" id="buttonsContainer" style="display: none;">
+                <div class="control">
+                    <button class="button is-success is-large" id="guardarNota">Gravar</button>
+                    <button class="button is-warning is-large" id="alterarNota" disabled>Alterar</button>
+                    <button class="button is-link is-large" id="voltarButton">Voltar</button>
+                </div>
+            </div>
+
+            <div class="success-message" id="success-message"></div>
+            <div class="error-message" id="launchErrorMessage" style="display: none;"></div>
+        </div>
+    </section>
+
+    <script>
+        async function loadAlunos() {
+            const response = await fetch('alunos.json');
+            return response.json();
+        }
+
+        async function displayAlunos() {
+            const alunos = await loadAlunos();
+            const tableBody = document.getElementById('alunosTableBody');
+            tableBody.innerHTML = '';
+
+            // Filtra alunos ativos e inativos
+            const ativos = alunos.filter(aluno => aluno.situacao !== 'Inativo');
+            const inativos = alunos.filter(aluno => aluno.situacao === 'Inativo');
+
+            // Exibe alunos ativos
+            ativos.forEach(aluno => {
+                const row = document.createElement('tr');
+                row.innerHTML = 
+                    `<td>${aluno.matricula}</td>
+                    <td>${aluno.nome}</td>
+                    <td>
+                        <input type="number" class="input is-normal small-input" min="0" max="10" step="1" placeholder="Nota" data-matricula="${aluno.matricula}" data-nome="${aluno.nome}">
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+
+            // Exibe alunos inativos
+            inativos.forEach(aluno => {
+                const row = document.createElement('tr');
+                row.classList.add('inactive');
+                row.innerHTML = 
+                    `<td>${aluno.matricula}</td>
+                    <td>${aluno.nome}</td>
+                    <td>
+                        <input type="number" class="input is-normal small-input" min="0" max="10" step="1" placeholder="Nota" data-matricula="${aluno.matricula}" data-nome="${aluno.nome}" disabled>
+                    </td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function displayHeaderInfo() {
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+            const headerInfo = 
+                `<div>Professor: ${loggedInUser.nome}</div>
+                <div>Série: ${loggedInUser.serie}</div>
+                <div>Turma: ${loggedInUser.turma}</div>
+                <div>Período: ${loggedInUser.periodo}</div>`;
+            document.getElementById('header-info').innerHTML = headerInfo;
+        }
+
+        function loadNotas() {
+            const bimestreSelecionado = document.getElementById('bimestreSelector').value;
+            const notasExistentes = JSON.parse(localStorage.getItem('notas')) || [];
+            const notasBimestre = notasExistentes.filter(nota => nota.bimestre == bimestreSelecionado);
+            const inputs = document.querySelectorAll('input[type="number"]');
+
+            // Limpa os campos antes de preencher
+            inputs.forEach(input => {
+                input.value = ''; // Reseta os inputs
+                // Habilita apenas os campos dos alunos ativos
+                if (!input.closest('tr').classList.contains('inactive')) {
+                    input.disabled = false; 
+                } else {
+                    input.disabled = true; // Mantém inativos desativados
+                }
+            });
+
+            // Preenche os campos com as notas já salvas
+            notasBimestre.forEach(nota => {
+                const input = [...inputs].find(input => input.dataset.matricula === nota.matricula);
+                if (input) {
+                    input.value = nota.nota !== null ? nota.nota : ''; // Preenche com a nota ou limpa se for inativo
+                }
+            });
+
+            // Verifica se já existem notas para o bimestre selecionado e exibe mensagem de erro
+            const errorMessage = document.getElementById('error-message');
+            const gravarButton = document.getElementById('guardarNota');
+            const alterarButton = document.getElementById('alterarNota');
+            if (notasBimestre.length > 0) {
+                errorMessage.innerText = `Já existem notas lançadas para o ${bimestreSelecionado}º Bimestre.`;
+                errorMessage.style.display = 'block'; // Exibe a mensagem
+                gravarButton.disabled = true; // Desabilita o botão Gravar
+                alterarButton.disabled = false; // Habilita o botão Alterar
+                inputs.forEach(input => {
+                    if (!input.closest('tr').classList.contains('inactive')) {
+                        input.disabled = true; // Desabilita apenas os campos ativos
+                    }
+                });
+            } else {
+                errorMessage.style.display = 'none'; // Limpa a mensagem se não houver notas
+                gravarButton.disabled = false; // Habilita o botão Gravar
+                alterarButton.disabled = true; // Desabilita o botão Alterar
+            }
+        }
+
+        document.getElementById('bimestreSelector').addEventListener('change', function() {
+            const bimestreSelecionado = this.value;
+            document.getElementById('info-message').style.display = bimestreSelecionado ? 'none' : 'block';
+            document.getElementById('tableContainer').style.display = bimestreSelecionado ? 'block' : 'none';
+            document.getElementById('buttonsContainer').style.display = bimestreSelecionado ? 'block' : 'none';
+            loadNotas(); // Carrega notas ao mudar o bimestre
+        });
+
+        document.getElementById('guardarNota').addEventListener('click', function() {
+            const bimestreSelecionado = document.getElementById('bimestreSelector').value;
+            const notasExistentes = JSON.parse(localStorage.getItem('notas')) || [];
+            
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.innerText = ''; // Limpa mensagens de erro
+            const launchErrorMessage = document.getElementById('launchErrorMessage');
+            launchErrorMessage.style.display = 'none'; // Limpa mensagens de erro de lançamento
+
+            const notas = [];
+            const invalidAlunos = [];
+            const inputs = document.querySelectorAll('input[type="number"]');
+            let valid = true;
+
+            inputs.forEach(input => {
+                const nota = parseFloat(input.value);
+                const alunoNome = input.dataset.nome;
+
+                // Verifica se o aluno é ativo
+                if (input.disabled) {
+                    notas.push({
+                        matricula: input.dataset.matricula,
+                        nome: alunoNome, // Adiciona o nome para alunos inativos
+                        nota: null // Nota vazia para alunos inativos
+                    });
+                    return; // Para continuar no loop
+                }
+
+                if (input.value === null) {
+                    valid = false;
+                    errorMessage.innerText += `A nota de ${alunoNome} não pode ficar vazia.\n`;
+                } else if (nota < 0 || nota > 10 || !Number.isInteger(nota)) {
+                    valid = false;
+                    invalidAlunos.push(alunoNome); // Adiciona aluno à lista de inválidos
+                } else {
+                    notas.push({
+                        matricula: input.dataset.matricula,
+                        nome: alunoNome, // Armazena o nome aqui
+                        nota: nota
+                    });
+                }
+            });
+
+            // Mensagem para notas inválidas
+            if (invalidAlunos.length > 0) {
+                launchErrorMessage.innerText = `As notas dos alunos ${invalidAlunos.join(', ')} são inválidas (deve ser um número inteiro entre 0 e 10).`;
+                launchErrorMessage.style.display = 'block'; // Exibe a mensagem de erro de lançamento
+            }
+
+            // Apenas grava notas se todas as notas dos alunos ativos forem válidas
+            if (valid && invalidAlunos.length === 0) {
+                notas.forEach(nota => {
+                    nota.bimestre = bimestreSelecionado; // Adiciona bimestre às notas
+                });
+
+                localStorage.setItem('notas', JSON.stringify([...notasExistentes, ...notas])); // Adiciona notas novas
+                document.getElementById('success-message').innerText = 'Notas gravadas com sucesso!';
+                 
+                // Desabilita todos os campos de notas após gravar
+                inputs.forEach(input => {
+                    input.disabled = true;
+                });
+
+                document.getElementById('alterarNota').disabled = false;  // Habilita o botão Alterar
+                document.getElementById('guardarNota').disabled = true;  // Habilita o botão Alterar
+                setTimeout(() => {
+                    document.getElementById('success-message').innerText = '';
+                }, 3000); // Limpa a mensagem após 3 segundos
+            }
+        });
+
+        document.getElementById('alterarNota').addEventListener('click', function() {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.style.display = 'none'; // Oculta a mensagem de erro
+            errorMessage.innerText = ''; // Limpa a mensagem de erro
+
+            const launchErrorMessage = document.getElementById('launchErrorMessage');
+            launchErrorMessage.style.display = 'none'; // Oculta a mensagem de erro de lançamento
+
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                if (!input.closest('tr').classList.contains('inactive')) {
+                    input.disabled = false; // Habilita todos os campos de alunos ativos
+                }
+            });
+
+            document.getElementById('guardarNota').disabled = false; // Habilita o botão Gravar
+        });
+
+        document.getElementById('voltarButton').addEventListener('click', function() {
+            window.location.href = 'dashboard.html'; // Redireciona para a página de dashboard
+        });
+
+        displayAlunos();
+        displayHeaderInfo();
+        loadNotas(); // Carrega notas ao iniciar
+    </script>
+</body>
+</html>

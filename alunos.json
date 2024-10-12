@@ -1,0 +1,82 @@
+[
+    {
+        "nome": "João Silva",
+        "matricula": "A001",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    },
+    {
+        "nome": "Maria Oliveira",
+        "matricula": "A002",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    },
+    {
+        "nome": "Pedro Santos",
+        "matricula": "A003",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    },
+    {
+        "nome": "Ana Costa",
+        "matricula": "A004",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    },
+    {
+        "nome": "Lucas Almeida",
+        "matricula": "A005",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Transferido"
+    },
+    {
+        "nome": "Fernanda Lima",
+        "matricula": "A006",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Inativo"
+    },
+    {
+        "nome": "Gabriel Pereira",
+        "matricula": "A007",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    },
+    {
+        "nome": "Juliana Rocha",
+        "matricula": "A008",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    },
+    {
+        "nome": "Thiago Mendes",
+        "matricula": "A009",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    },
+    {
+        "nome": "Sofia Martins",
+        "matricula": "A010",
+        "serie": "1",
+        "turma": "A",
+        "periodo": "Manhã",
+        "situacao": "Ativo"
+    }
+]

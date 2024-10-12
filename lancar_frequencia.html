@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançar Frequência</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        .header-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .header-info div {
+            margin: 0 10px;
+        }
+        .calendar {
+            margin-bottom: 20px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        .notification {
+            margin-bottom: 20px;
+        }
+        .inactive {
+            background-color: #f5f5f5;
+            color: #ccc;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #F44336; /* Vermelho para Faltou */
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "F"; /* Muda para "F" quando em Faltou */
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black; /* Cor do texto */
+        }
+        input:checked + .slider {
+            background-color: #4CAF50; /* Verde para Compareceu */
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            content: "C"; /* Muda para "C" quando em Compareceu */
+        }
+        .alert-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .success-message {
+            color: green;
+            font-weight: bold;
+            margin-top: 20px; /* Espaçamento consistente */
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title has-text-centered">Lançar Frequência</h1>
+            <div id="header-info" class="header-info content"></div>
+
+            <div class="notification is-warning">
+                <strong>Atenção! Selecione um dia no calendário.</strong>
+            </div>
+
+            <div class="calendar">
+                <label class="label">Data da Frequência</label>
+                <input type="date" id="dataFrequencia" class="input" required />
+            </div>
+
+            <div id="alert" class="alert-message" style="display: none;"></div>
+
+            <div class="table-container">
+                <table class="table is-striped is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th>
+                            <th>Situação</th>
+                            <th>Nome do Aluno</th>
+                            <th>Faltou/Compareceu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alunosTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="success" class="success-message" style="display: none;"></div>
+            
+            <div class="field has-text-centered">
+                <div class="control">
+                    <button class="button is-success is-large" id="guardarFrequencia" disabled>Gravar</button>
+                    <button class="button is-warning is-large" id="alterarFrequencia" disabled>Alterar</button>
+                    <button class="button is-link is-large" id="voltar">Voltar</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        async function loadAlunos() {
+            const response = await fetch('alunos.json');
+            return response.json();
+        }
+
+        async function displayAlunos() {
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+            const alunos = await loadAlunos();
+
+            const alunosFiltrados = alunos.filter(a => a.serie === loggedInUser.serie && a.turma === loggedInUser.turma && a.periodo === loggedInUser.periodo);
+            const alunosOrdenados = alunosFiltrados.sort((a, b) => {
+                if (a.situacao === "Ativo" && b.situacao !== "Ativo") return -1;
+                if (a.situacao !== "Ativo" && b.situacao === "Ativo") return 1;
+                return a.nome.localeCompare(b.nome);
+            });
+
+            const headerInfo = `
+                <div>Professor: ${loggedInUser.nome}</div>
+                <div>Série: ${loggedInUser.serie}</div>
+                <div>Turma: ${loggedInUser.turma}</div>
+                <div>Período: ${loggedInUser.periodo}</div>
+            `;
+            document.getElementById('header-info').innerHTML = headerInfo;
+
+            const tableBody = document.getElementById('alunosTableBody');
+            tableBody.innerHTML = '';
+
+            alunosOrdenados.forEach(aluno => {
+                const row = document.createElement('tr');
+                if (aluno.situacao === 'Inativo' || aluno.situacao === 'Transferido') {
+                    row.classList.add('inactive');
+                }
+                row.innerHTML = `
+                    <td>${aluno.matricula}</td>
+                    <td>${aluno.situacao}</td>
+                    <td>${aluno.nome}</td>
+                    <td>
+                        <label class="switch">
+                            <input type="checkbox" ${aluno.situacao === 'Ativo' ? 'checked' : ''} ${aluno.situacao !== 'Ativo' ? 'disabled' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateButtonState() {
+            const selectedDate = document.getElementById('dataFrequencia').value;
+            const formattedDate = selectedDate.split('-').reverse().join('/');
+            const frequencias = JSON.parse(localStorage.getItem('frequencias')) || [];
+            const frequenciaExistente = frequencias.find(f => f.data === formattedDate);
+
+            document.getElementById('guardarFrequencia').disabled = !!frequenciaExistente;
+            document.getElementById('alterarFrequencia').disabled = !frequenciaExistente;
+
+            const alertDiv = document.getElementById('alert');
+            if (frequenciaExistente) {
+                alertDiv.innerText = 'Já existe frequência registrada para esta data.';
+                alertDiv.style.display = 'block';
+            } else {
+                alertDiv.style.display = 'none';
+            }
+        }
+
+        document.getElementById('dataFrequencia').addEventListener('change', function() {
+            updateButtonState();
+        });
+
+        document.getElementById('guardarFrequencia').addEventListener('click', function() {
+            const selectedDate = document.getElementById('dataFrequencia').value;
+            if (!selectedDate) {
+                alert('Por favor, selecione uma data.');
+                return;
+            }
+
+            const formattedDate = selectedDate.split('-').reverse().join('/');
+            const frequencias = JSON.parse(localStorage.getItem('frequencias')) || [];
+            const alunosFrequencia = [];
+            const tableBody = document.getElementById('alunosTableBody');
+
+            Array.from(tableBody.rows).forEach(row => {
+                const matricula = row.cells[0].innerText;
+                const situacao = row.cells[1].innerText;
+                const nome = row.cells[2].innerText;
+                const presente = row.querySelector('input[type="checkbox"]').checked;
+
+                alunosFrequencia.push({
+                    matricula,
+                    situacao,
+                    nome,
+                    presente: presente ? 'Compareceu' : 'Faltou',
+                });
+            });
+
+            const existingIndex = frequencias.findIndex(f => f.data === formattedDate);
+            if (existingIndex !== -1) {
+                frequencias[existingIndex].alunos = alunosFrequencia;
+            } else {
+                frequencias.push({ data: formattedDate, alunos: alunosFrequencia });
+            }
+            localStorage.setItem('frequencias', JSON.stringify(frequencias));
+
+            document.getElementById('success').innerText = 'Frequência gravada com sucesso!';
+            document.getElementById('success').style.display = 'block';
+            document.getElementById('alert').style.display = 'none';
+        });
+
+        document.getElementById('alterarFrequencia').addEventListener('click', function() {
+            const selectedDate = document.getElementById('dataFrequencia').value;
+            const formattedDate = selectedDate.split('-').reverse().join('/');
+            const frequencias = JSON.parse(localStorage.getItem('frequencias')) || [];
+            const frequenciaExistente = frequencias.find(f => f.data === formattedDate);
+
+            if (frequenciaExistente) {
+                const alunosFrequencia = frequenciaExistente.alunos;
+
+                // Atualiza os switches de acordo com os dados armazenados
+                const tableBody = document.getElementById('alunosTableBody');
+                Array.from(tableBody.rows).forEach(row => {
+                    const matricula = row.cells[0].innerText;
+                    const alunoData = alunosFrequencia.find(aluno => aluno.matricula === matricula);
+                    
+                    if (alunoData) {
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        checkbox.checked = alunoData.presente === 'Compareceu';
+                        checkbox.disabled = false; // Habilita o switch para edição
+                    }
+                });
+
+                document.getElementById('alert').style.display = 'none';
+                document.getElementById('guardarFrequencia').disabled = false; // Habilita o botão Gravar
+            }
+        });
+
+        document.getElementById('voltar').addEventListener('click', function() {
+            window.location.href = 'dashboard.html';
+        });
+
+        displayAlunos();
+    </script>
+</body>
+</html>

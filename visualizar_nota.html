@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Notas</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .header-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+        .header-info div {
+            margin: 5px 10px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            text-align: center; /* Centraliza texto nas células */
+        }
+        .table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .table td {
+            background-color: #f9f9f9;
+        }
+        .table tr:hover td {
+            background-color: #e0f7fa; /* Azul claro ao passar o mouse */
+        }
+        .success-message {
+            margin-top: 10px;
+            color: #4CAF50; /* Verde para sucesso */
+            text-align: center;
+        }
+        .error-message {
+            margin-top: 10px;
+            color: #D8000C; /* Vermelho para erro */
+            text-align: center;
+        }
+        .button {
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+        function loadInfo() {
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')) || {};
+            const professor = loggedInUser.nome || 'Professor não definido';
+            const serie = loggedInUser.serie || 'Série não definida';
+            const turma = loggedInUser.turma || 'Turma não definida';
+            const periodo = loggedInUser.periodo || 'Período não definido';
+
+            const headerInfo = `
+                <div>Professor: ${professor}</div>
+                <div>Série: ${serie}</div>
+                <div>Turma: ${turma}</div>
+                <div>Período: ${periodo}</div>
+            `;
+            document.getElementById('header-info').innerHTML = headerInfo;
+        }
+
+        function loadGrades() {
+            const notas = JSON.parse(localStorage.getItem('notas')) || [];
+            const tableBody = document.getElementById('gradesTableBody');
+            tableBody.innerHTML = ''; // Limpa a tabela antes de popular
+
+            // Agrupa notas por matrícula
+            const groupedNotas = {};
+            notas.forEach(nota => {
+                if (!groupedNotas[nota.matricula]) {
+                    groupedNotas[nota.matricula] = { nome: nota.nome, notas: [null, null, null, null] };
+                }
+                groupedNotas[nota.matricula].notas[nota.bimestre - 1] = nota.nota; // -1 para indexar corretamente
+            });
+
+            // Preenche a tabela com as notas
+            for (const matricula in groupedNotas) {
+                const student = groupedNotas[matricula];
+                const average = (student.notas.reduce((sum, note) => sum + (note || 0), 0) / student.notas.length).toFixed(2);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="has-text-left">${student.nome}</td>
+                    <td>${student.notas[0] !== null ? student.notas[0] : 0}</td>
+                    <td>${student.notas[1] !== null ? student.notas[1] : 0}</td>
+                    <td>${student.notas[2] !== null ? student.notas[2] : 0}</td>
+                    <td>${student.notas[3] !== null ? student.notas[3] : 0}</td>
+                    <td>${average}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+
+        window.onload = function() {
+            loadInfo();
+            loadGrades();
+        };
+
+        function goBack() {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title has-text-centered">Visualizar Notas</h1>
+            
+            <div id="header-info" class="header-info"></div>
+
+            <div class="table-container">
+                <div class="has-text-centered">
+                    <button class="button is-link is-medium" onclick="goBack()">Voltar</button>
+                </div>
+                <table class="table is-striped is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th class="has-text-left">Nome</th>
+                            <th>1º Bimestre</th>
+                            <th>2º Bimestre</th>
+                            <th>3º Bimestre</th>
+                            <th>4º Bimestre</th>
+                            <th>Média Final</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradesTableBody">
+                        <!-- As notas dos alunos serão carregadas aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!--cadastro.html-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Cadastro</h1>
+            <form id="cadastroForm">
+                <div class="field">
+                    <label class="label">Nome</label>
+                    <div class="control">
+                        <input type="text" class="input" id="nome" placeholder="Nome" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Tipo de Usuário</label>
+                    <div class="control">
+                        <select id="tipo">
+                            <option value="professor">Professor</option>
+                            <option value="aluno">Aluno</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Matrícula</label>
+                    <div class="control">
+                        <input type="text" class="input" id="matricula" placeholder="Matrícula" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Senha</label>
+                    <div class="control">
+                        <input type="password" class="input" id="senha" placeholder="Senha" required>
+                    </div>
+                </div>
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button type="submit" class="button is-primary">Cadastrar</button>
+                    </div>
+                    <div class="control">
+                        <button type="button" class="button is-light" id="cancelar">Cancelar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('cadastroForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const tipo = document.getElementById('tipo').value;
+            const matricula = document.getElementById('matricula').value;
+            const senha = document.getElementById('senha').value;
+
+            const usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+
+            // Verifica se a matrícula já está cadastrada
+            const matriculaExistente = usuarios.some(user => user.matricula === matricula);
+            if (matriculaExistente) {
+                alert('Essa matrícula já está cadastrada. Por favor, escolha outra.');
+                return; // Não prossegue com o cadastro
+            }
+
+            // Adiciona o novo usuário
+            usuarios.push({ nome, tipo, matricula, senha });
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+
+            alert('Usuário cadastrado com sucesso!');
+            // Redirecionar para a tela de login
+            window.location.href = 'login.html';
+        });
+
+        // Lógica do botão Cancelar
+        document.getElementById('cancelar').addEventListener('click', function() {
+            window.location.href = 'login.html'; // Redireciona para a tela de login
+        });
+    </script>
+</body>
+</html>
